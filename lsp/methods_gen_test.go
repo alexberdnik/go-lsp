@@ -4,11 +4,18 @@ import (
 	"fmt"
 	"io/ioutil"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 
-	"github.com/TobiasYin/go-lsp/lsp/defines"
+	"github.com/alexberdnik/go-lsp/lsp/defines"
 )
+
+var filename = func() string {
+	_, name, _, _ := runtime.Caller(0)
+	name = strings.Replace(name, "lsp/methods_gen_test.go", "lsp", -1)
+	return name
+}()
 
 type typ_ struct {
 	typName string
@@ -119,7 +126,7 @@ func generateOneNoResp(name, regName, args, error, code string, withBuiltin bool
 
 func TestMethodsGen(t *testing.T) {
 	res := generate(methods)
-	err := ioutil.WriteFile("/Users/tobias/projects/go-lsp/lsp/methods_gen.go", []byte(res), 0777)
+	err := ioutil.WriteFile(filename+"/methods_gen.go", []byte(res), 0777)
 	if err != nil {
 		panic(err)
 	}
@@ -220,7 +227,18 @@ func generate(items []method) string {
 			}
 		}
 	}
-	pkg := "// code gen by methods_gen_test.go, do not edit!\npackage lsp\n"
+	pkg := `
+// code gen by methods_gen_test.go, do not edit!
+package lsp
+
+import (
+	"context"
+
+	"github.com/alexberdnik/go-lsp/jsonrpc"
+	"github.com/alexberdnik/go-lsp/lsp/defines"
+)
+
+`
 	code1 := strings.Join(codeBlock1, "\n")
 	code2 := strings.Join(codeBlock2, "\n")
 	code3 := strings.Join(codeBlock3, "\n")
