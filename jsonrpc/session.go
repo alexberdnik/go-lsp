@@ -24,7 +24,6 @@ type executor struct {
 }
 
 type Session struct {
-	id           int
 	server       *Server
 	conn         ReaderWriter
 	executors    map[interface{}]*executor
@@ -33,8 +32,8 @@ type Session struct {
 	cancel       chan struct{}
 }
 
-func newSession(id int, server *Server, conn ReaderWriter) *Session {
-	s := &Session{id: id, server: server, conn: conn}
+func newSession(server *Server, conn ReaderWriter) *Session {
+	s := &Session{server: server, conn: conn}
 	s.executors = make(map[interface{}]*executor)
 	s.cancel = make(chan struct{}, 1)
 	return s
@@ -50,6 +49,26 @@ func (s *Session) Start() {
 
 		}
 	}
+}
+
+func (s *Session) Notify(msg *NotificationMessage) error {
+	res, err := jsoniter.Marshal(msg)
+	if err != nil {
+		return err
+	}
+	logs.Printf("Notification: [%s, %s]\n", msg.Method, string(msg.Params))
+	s.writeLock.Lock()
+	defer s.writeLock.Unlock()
+	totalLen := len(res)
+	err = s.mustWrite([]byte(fmt.Sprintf("Content-Length: %d\r\n\r\n", totalLen)))
+	if err != nil {
+		logs.Printf("Notification error: [%v]\n", msg)
+	}
+	err = s.mustWrite(res)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *Session) handle() {
@@ -303,10 +322,9 @@ func (s *Session) handlerError(err error) {
 		case s.cancel <- struct{}{}:
 		default:
 		}
-		s.server.removeSession(s.id)
+		s.server.removeSession()
 	}
 	logs.Println("error: ", err)
-	return
 }
 
 func isNil(i interface{}) bool {

@@ -12,15 +12,13 @@ type MethodInfo struct {
 }
 
 type Server struct {
-	session     map[int]*Session
-	nowId       int
+	session     *Session
 	methods     map[string]MethodInfo
 	sessionLock sync.Mutex
 }
 
 func NewServer() *Server {
 	s := &Server{}
-	s.session = make(map[int]*Session)
 	s.methods = make(map[string]MethodInfo)
 
 	// Register Builtin
@@ -29,27 +27,31 @@ func NewServer() *Server {
 	return s
 }
 
+func (s *Server) Notify(msg *NotificationMessage) error {
+	if s.session != nil {
+		return s.session.Notify(msg)
+	}
+	return nil
+}
+
 func (s *Server) RegisterMethod(m MethodInfo) {
 	s.methods[m.Name] = m
 }
 
-func (s *Server) ConnComeIn(conn ReaderWriter) {
-	session := s.newSession(conn)
-	session.Start()
+func (s *Server) Connect(conn ReaderWriter) {
+	s.session = s.newSession(conn)
+	s.session.Start()
 }
 
-func (s *Server) removeSession(id int) {
+func (s *Server) removeSession() {
 	s.sessionLock.Lock()
 	defer s.sessionLock.Unlock()
-	delete(s.session, id)
+	s.session = nil
 }
 
 func (s *Server) newSession(conn ReaderWriter) *Session {
 	s.sessionLock.Lock()
 	defer s.sessionLock.Unlock()
-	id := s.nowId
-	s.nowId += 1
-	session := newSession(id, s, conn)
-	s.session[id] = session
+	session := newSession(s, conn)
 	return session
 }

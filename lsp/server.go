@@ -48,12 +48,12 @@ func (s *Server) run() {
 			if err != nil {
 				panic(err)
 			}
-			go s.rpcServer.ConnComeIn(conn)
+			go s.rpcServer.Connect(conn)
 		}
 	} else {
 		logs.Println("use stdio mode.")
 		// use stdio mode
-		s.rpcServer.ConnComeIn(NewStdio())
+		s.rpcServer.Connect(NewStdio())
 	}
 }
 
