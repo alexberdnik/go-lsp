@@ -4,7 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/url"
 	"os"
@@ -22,24 +22,22 @@ func strPtr(str string) *string {
 var logPath *string
 
 func init() {
-	var logger *log.Logger
+	var writer io.Writer
 	defer func() {
-		logs.Init(logger)
+		log.SetOutput(writer)
 	}()
 	logPath = flag.String("logs", "", "logs file path")
 	if logPath == nil || *logPath == "" {
-		logger = log.New(os.Stderr, "", 0)
+		writer = os.Stderr
 		return
 	}
 	p := *logPath
 	f, err := os.Open(p)
-	if err == nil {
-		logger = log.New(f, "", 0)
-		return
+	if err != nil {
+		f, err = os.Create(p)
 	}
-	f, err = os.Create(p)
 	if err == nil {
-		logger = log.New(f, "", 0)
+		writer = f
 		return
 	}
 	panic(fmt.Sprintf("logs init error: %v", *logPath))
@@ -57,7 +55,7 @@ func main() {
 	server.OnCompletion(func(ctx context.Context, req *defines.CompletionParams) (result *[]defines.CompletionItem, err error) {
 		logs.Println("completion: ", req)
 		d := defines.CompletionItemKindText
-		return &[]defines.CompletionItem{defines.CompletionItem{
+		return &[]defines.CompletionItem{{
 			Label:      "code",
 			Kind:       &d,
 			InsertText: strPtr("Hello"),
@@ -91,7 +89,7 @@ func main() {
 
 func ReadFile(filename defines.DocumentUri) ([]string, error) {
 	enEscapeUrl, _ := url.QueryUnescape(string(filename))
-	data, err := ioutil.ReadFile(enEscapeUrl[6:])
+	data, err := os.ReadFile(enEscapeUrl[6:])
 	if err != nil {
 		return nil, err
 	}

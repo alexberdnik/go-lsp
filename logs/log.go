@@ -2,9 +2,14 @@ package logs
 
 import "log"
 
-var logger *log.Logger
+type Logger interface {
+	Println(v ...interface{})
+	Printf(fmt string, v ...interface{})
+}
 
-func Init(l *log.Logger) {
+var logger Logger = &stdLog{}
+
+func Init(l Logger) {
 	logger = l
 }
 
@@ -14,4 +19,14 @@ func Println(v ...interface{}) {
 
 func Printf(fmt string, v ...interface{}) {
 	logger.Printf(fmt, v...)
+}
+
+type stdLog struct{}
+
+func (s *stdLog) Println(v ...interface{}) {
+	log.Println(v...)
+}
+
+func (s *stdLog) Printf(fmt string, v ...interface{}) {
+	log.Printf(fmt, v...)
 }
