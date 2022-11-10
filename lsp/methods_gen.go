@@ -23,7 +23,7 @@ type Methods struct {
 	onDidCloseTextDocument func(ctx context.Context, req *defines.DidCloseTextDocumentParams) error
 	onWillSaveTextDocument func(ctx context.Context, req *defines.WillSaveTextDocumentParams) error
 	onDidSaveTextDocument func(ctx context.Context, req *defines.DidSaveTextDocumentParams) error
-	onExecuteCommand func(ctx context.Context, req *defines.ExecuteCommandParams) error
+	onExecuteCommand func(ctx context.Context, req *defines.ExecuteCommandParams) (*interface{}, error)
 	onHover func(ctx context.Context, req *defines.HoverParams) (*defines.Hover, error)
 	onCompletion func(ctx context.Context, req *defines.CompletionParams) (*[]defines.CompletionItem, error)
 	onCompletionResolve func(ctx context.Context, req *defines.CompletionItem) (*defines.CompletionItem, error)
@@ -203,7 +203,7 @@ func (m *Methods) didChangeConfigurationMethodInfo() *jsonrpc.MethodInfo {
 		return nil
 	}	
     return &jsonrpc.MethodInfo{
-		Name: "didChangeConfiguration",
+		Name: "workspace/didChangeConfiguration",
 		NewRequest: func() interface{} {
 			return &defines.DidChangeConfigurationParams{}
 		},
@@ -358,7 +358,7 @@ func (m *Methods) willSaveTextDocumentMethodInfo() *jsonrpc.MethodInfo {
 		return nil
 	}	
     return &jsonrpc.MethodInfo{
-		Name: "willSaveTextDocument",
+		Name: "textDocument/willSave",
 		NewRequest: func() interface{} {
 			return &defines.WillSaveTextDocumentParams{}
 		},
@@ -398,7 +398,7 @@ func (m *Methods) didSaveTextDocumentMethodInfo() *jsonrpc.MethodInfo {
 }
 
 
-func (m *Methods) OnExecuteCommand(f func(ctx context.Context, req *defines.ExecuteCommandParams) (err error)) {
+func (m *Methods) OnExecuteCommand(f func(ctx context.Context, req *defines.ExecuteCommandParams) (result *interface{}, err error)) {
 	m.onExecuteCommand = f
 }
 
@@ -406,9 +406,9 @@ func (m *Methods) OnExecuteCommand(f func(ctx context.Context, req *defines.Exec
 func (m *Methods) executeCommand(ctx context.Context, req interface{}) (interface{}, error) {
 	params := req.(*defines.ExecuteCommandParams)
 	if m.onExecuteCommand != nil {
-		err := m.onExecuteCommand(ctx, params)
+		res, err := m.onExecuteCommand(ctx, params)
 		e := wrapErrorToRespError(err, 0)
-		return nil, e
+		return res, e
 	}
     return nil, nil
 }
@@ -420,7 +420,7 @@ func (m *Methods) executeCommandMethodInfo() *jsonrpc.MethodInfo {
 		return nil
 	}	
     return &jsonrpc.MethodInfo{
-		Name: "executeCommand",
+		Name: "workspace/executeCommand",
 		NewRequest: func() interface{} {
 			return &defines.ExecuteCommandParams{}
 		},

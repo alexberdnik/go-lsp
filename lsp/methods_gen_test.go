@@ -2,7 +2,7 @@ package lsp
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"reflect"
 	"runtime"
 	"strings"
@@ -44,6 +44,10 @@ func getType(i interface{}) []typ_ {
 		return res
 	}
 	t := reflect.TypeOf(i)
+	if t == reflect.TypeOf(lspAny{}) {
+		res = append(res, typ_{typ: "interface{}", typName: "interface{}"})
+		return res
+	}
 	if t == reflect.TypeOf(or{}) {
 		orItems := i.(or)
 		for _, item := range orItems {
@@ -126,7 +130,7 @@ func generateOneNoResp(name, regName, args, error, code string, withBuiltin bool
 
 func TestMethodsGen(t *testing.T) {
 	res := generate(methods)
-	err := ioutil.WriteFile(filename+"/methods_gen.go", []byte(res), 0777)
+	err := os.WriteFile(filename+"/methods_gen.go", []byte(res), 0777)
 	if err != nil {
 		panic(err)
 	}

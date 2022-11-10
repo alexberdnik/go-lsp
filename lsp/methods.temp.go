@@ -14,6 +14,7 @@ type method struct {
 }
 
 type or []interface{}
+type lspAny struct{}
 
 var methods = []method{
 	{
@@ -29,14 +30,17 @@ var methods = []method{
 		Args: defines.InitializeParams{},
 	},
 	{
-		Name: "Shutdown",
+		Name:         "Shutdown",
+		RegisterName: "shutdown",
 	},
 	{
-		Name: "Exit",
+		Name:         "Exit",
+		RegisterName: "exit",
 	},
 	{
-		Name: "DidChangeConfiguration",
-		Args: defines.DidChangeConfigurationParams{},
+		Name:         "DidChangeConfiguration",
+		RegisterName: "workspace/didChangeConfiguration",
+		Args:         defines.DidChangeConfigurationParams{},
 	},
 	{
 		Name:         "DidChangeWatchedFiles",
@@ -59,8 +63,9 @@ var methods = []method{
 		Args:         defines.DidCloseTextDocumentParams{},
 	},
 	{
-		Name: "WillSaveTextDocument",
-		Args: defines.WillSaveTextDocumentParams{},
+		Name:         "WillSaveTextDocument",
+		RegisterName: "textDocument/willSave",
+		Args:         defines.WillSaveTextDocumentParams{},
 	},
 	{
 		Name:         "DidSaveTextDocument",
@@ -68,11 +73,10 @@ var methods = []method{
 		Args:         defines.DidSaveTextDocumentParams{},
 	},
 	{
-		Name:          "ExecuteCommand",
-		Args:          defines.ExecuteCommandParams{},
-		Result:        interface{}(nil),
-		Error:         nil,
-		ProgressToken: nil,
+		Name:         "ExecuteCommand",
+		RegisterName: "workspace/executeCommand",
+		Args:         defines.ExecuteCommandParams{},
+		Result:       lspAny{},
 	},
 	{
 		Name:         "Hover",
