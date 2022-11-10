@@ -1,3 +1,8 @@
+# This project is a fork of [go-lsp](https://github.com/TobiasYin/go-lsp) which is abandoned
+
+It contains various fixes for message formats.
+
+
 # LSP(language server protocol) defines for golang
 
 [lsp](https://microsoft.github.io/language-server-protocol) types is from [vscode-languageserver-node](https://github.com/microsoft/vscode-languageserver-node).
